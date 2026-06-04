@@ -402,7 +402,21 @@ def multiply(
                 var = model.find_component(varstr)
 
                 def const_rule(model, t):
-                    return var[t] == expression1[t] * expression2[t]
+                    _t1 = None
+                    _t2 = None
+                    if isinstance(expression1, (pyo.Param, pyo.Var)):
+                        _t1 = t
+                    if isinstance(expression2, (pyo.Param, pyo.Var)):
+                        _t2 = t
+                    if _t1 == None and _t2 is not None:
+                        _t1 = np.where(np.array(expression2.index_set().data()) == t)[
+                            0
+                        ][0]
+                    if _t2 == None and _t1 is not None:
+                        _t2 = np.where(np.array(expression1.index_set().data()) == t)[
+                            0
+                        ][0]
+                    return var[t] == expression1[_t1] * expression2[_t2]
 
                 constraint = pyo.Constraint(model.t, rule=const_rule)
                 model.add_component(varstr + "_constraint", constraint)
